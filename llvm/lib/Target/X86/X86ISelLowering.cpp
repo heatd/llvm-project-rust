@@ -2492,7 +2492,7 @@ unsigned X86TargetLowering::getAddressSpace() const {
 }
 
 static bool hasStackGuardSlotTLS(const Triple &TargetTriple) {
-  return TargetTriple.isOSGlibc() || TargetTriple.isOSFuchsia() ||
+  return TargetTriple.isOSGlibc() || TargetTriple.isOSFuchsia() || TargetTriple.isOSOnyx() ||
          (TargetTriple.isAndroid() && !TargetTriple.isAndroidVersionLT(17));
 }
 
@@ -2504,7 +2504,7 @@ static Constant* SegmentOffset(IRBuilderBase &IRB,
 }
 
 Value *X86TargetLowering::getIRStackGuard(IRBuilderBase &IRB) const {
-  // glibc, bionic, and Fuchsia have a special slot for the stack guard in
+  // glibc, bionic, Onyx and Fuchsia have a special slot for the stack guard in
   // tcbhead_t; use it instead of the usual global variable (see
   // sysdeps/{i386,x86_64}/nptl/tls.h)
   if (hasStackGuardSlotTLS(Subtarget.getTargetTriple())) {
@@ -2554,7 +2554,7 @@ void X86TargetLowering::insertSSPDeclarations(Module &M) const {
 
   StringRef GuardMode = M.getStackProtectorGuard();
 
-  // glibc, bionic, and Fuchsia have a special slot for the stack guard.
+  // glibc, bionic, Onyx and Fuchsia have a special slot for the stack guard.
   if ((GuardMode == "tls" || GuardMode.empty()) &&
       hasStackGuardSlotTLS(Subtarget.getTargetTriple()))
     return;

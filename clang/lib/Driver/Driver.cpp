@@ -22,6 +22,7 @@
 #include "ToolChains/DragonFly.h"
 #include "ToolChains/FreeBSD.h"
 #include "ToolChains/Fuchsia.h"
+#include "ToolChains/Onyx.h"
 #include "ToolChains/Gnu.h"
 #include "ToolChains/HIP.h"
 #include "ToolChains/Haiku.h"
@@ -5298,6 +5299,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       break;
     case llvm::Triple::Fuchsia:
       TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
+      break;
+     case llvm::Triple::Onyx:
+      TC = std::make_unique<toolchains::Onyx>(*this, Target, Args);
       break;
     case llvm::Triple::Solaris:
       TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);

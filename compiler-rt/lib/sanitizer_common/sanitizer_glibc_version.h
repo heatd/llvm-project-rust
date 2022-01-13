@@ -15,7 +15,7 @@
 
 #include "sanitizer_platform.h"
 
-#if SANITIZER_LINUX || SANITIZER_FUCHSIA
+#if SANITIZER_LINUX || SANITIZER_FUCHSIA || SANITIZER_ONYX
 #include <features.h>
 #endif
 

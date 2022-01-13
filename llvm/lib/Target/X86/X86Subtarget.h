@@ -849,6 +849,7 @@ public:
   bool isTargetNaCl64() const { return isTargetNaCl() && is64Bit(); }
   bool isTargetMCU() const { return TargetTriple.isOSIAMCU(); }
   bool isTargetFuchsia() const { return TargetTriple.isOSFuchsia(); }
+  bool isTargetOnyx() const { return TargetTriple.isOSOnyx(); }
 
   bool isTargetWindowsMSVC() const {
     return TargetTriple.isWindowsMSVCEnvironment();

@@ -39,7 +39,7 @@
 
 // TLS is handled differently on different platforms
 #if SANITIZER_LINUX || SANITIZER_NETBSD || \
-  SANITIZER_FREEBSD
+  SANITIZER_FREEBSD || SANITIZER_ONYX
 # define SANITIZER_TLS_INITIAL_EXEC_ATTRIBUTE \
     __attribute__((tls_model("initial-exec"))) thread_local
 #else
@@ -169,7 +169,7 @@ typedef int pid_t;
 #endif
 
 #if SANITIZER_FREEBSD || SANITIZER_NETBSD || \
-    SANITIZER_MAC || \
+    SANITIZER_MAC || (SANITIZER_ONYX && defined(__x86_64__)) || \
     (SANITIZER_SOLARIS && (defined(_LP64) || _FILE_OFFSET_BITS == 64)) || \
     (SANITIZER_LINUX && defined(__x86_64__))
 typedef u64 OFF_T;

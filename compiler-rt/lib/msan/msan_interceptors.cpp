@@ -837,7 +837,7 @@ INTERCEPTOR(int, gethostname, char *name, SIZE_T len) {
   return res;
 }
 
-#if !SANITIZER_FREEBSD && !SANITIZER_NETBSD
+#if !SANITIZER_FREEBSD && !SANITIZER_NETBSD && !SANITIZER_ONYX
 INTERCEPTOR(int, epoll_wait, int epfd, void *events, int maxevents,
     int timeout) {
   ENSURE_MSAN_INITED();
@@ -852,7 +852,7 @@ INTERCEPTOR(int, epoll_wait, int epfd, void *events, int maxevents,
 #define MSAN_MAYBE_INTERCEPT_EPOLL_WAIT
 #endif
 
-#if !SANITIZER_FREEBSD && !SANITIZER_NETBSD
+#if !SANITIZER_FREEBSD && !SANITIZER_NETBSD && !SANITIZER_ONYX
 INTERCEPTOR(int, epoll_pwait, int epfd, void *events, int maxevents,
     int timeout, void *sigmask) {
   ENSURE_MSAN_INITED();
@@ -1490,6 +1490,10 @@ static int msan_dl_iterate_phdr_cb(__sanitizer_dl_phdr_info *info, SIZE_T size,
   return cbdata->callback(info, size, cbdata->data);
 }
 
+#if !SANITIZER_ONYX
+
+// HACK: This should compile
+
 INTERCEPTOR(void *, shmat, int shmid, const void *shmaddr, int shmflg) {
   ENSURE_MSAN_INITED();
   void *p = REAL(shmat)(shmid, shmaddr, shmflg);
@@ -1502,6 +1506,8 @@ INTERCEPTOR(void *, shmat, int shmid, const void *shmaddr, int shmflg) {
   }
   return p;
 }
+
+#endif
 
 INTERCEPTOR(int, dl_iterate_phdr, dl_iterate_phdr_cb callback, void *data) {
   void *ctx;
@@ -1720,7 +1726,11 @@ void InitializeInterceptors() {
   INTERCEPT_FUNCTION(tzset);
   INTERCEPT_FUNCTION(atexit);
   INTERCEPT_FUNCTION(__cxa_atexit);
+
+#if !SANITIZER_ONYX
   INTERCEPT_FUNCTION(shmat);
+#endif
+
   INTERCEPT_FUNCTION(fork);
   MSAN_MAYBE_INTERCEPT_OPENPTY;
   MSAN_MAYBE_INTERCEPT_FORKPTY;

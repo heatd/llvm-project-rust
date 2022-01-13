@@ -20,6 +20,7 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif __APPLE__
 #define LIBFUZZER_APPLE 1
 #define LIBFUZZER_FUCHSIA 0
@@ -28,6 +29,7 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif __NetBSD__
 #define LIBFUZZER_APPLE 0
 #define LIBFUZZER_FUCHSIA 0
@@ -36,6 +38,7 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif __FreeBSD__
 #define LIBFUZZER_APPLE 0
 #define LIBFUZZER_FUCHSIA 0
@@ -44,6 +47,7 @@
 #define LIBFUZZER_FREEBSD 1
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif _WIN32
 #define LIBFUZZER_APPLE 0
 #define LIBFUZZER_FUCHSIA 0
@@ -52,6 +56,7 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 1
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif __Fuchsia__
 #define LIBFUZZER_APPLE 0
 #define LIBFUZZER_FUCHSIA 1
@@ -60,6 +65,7 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 0
 #elif __EMSCRIPTEN__
 #define LIBFUZZER_APPLE 0
 #define LIBFUZZER_FUCHSIA 0
@@ -68,6 +74,16 @@
 #define LIBFUZZER_FREEBSD 0
 #define LIBFUZZER_WINDOWS 0
 #define LIBFUZZER_EMSCRIPTEN 1
+#define LIBFUZZER_ONYX 0
+#elif __onyx__
+#define LIBFUZZER_APPLE 0
+#define LIBFUZZER_FUCHSIA 0
+#define LIBFUZZER_LINUX 0
+#define LIBFUZZER_NETBSD 0
+#define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_WINDOWS 0
+#define LIBFUZZER_EMSCRIPTEN 0
+#define LIBFUZZER_ONYX 1
 #else
 #error "Support for your platform has not been implemented"
 #endif
@@ -85,7 +101,7 @@
 
 #define LIBFUZZER_POSIX                                                        \
   (LIBFUZZER_APPLE || LIBFUZZER_LINUX || LIBFUZZER_NETBSD ||                   \
-   LIBFUZZER_FREEBSD || LIBFUZZER_EMSCRIPTEN)
+   LIBFUZZER_FREEBSD || LIBFUZZER_EMSCRIPTEN || LIBFUZZER_ONYX)
 
 #ifdef __x86_64
 #if __has_attribute(target)

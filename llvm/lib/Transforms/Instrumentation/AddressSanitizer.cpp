@@ -462,6 +462,7 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
   bool IsRISCV64 = TargetTriple.getArch() == Triple::riscv64;
   bool IsWindows = TargetTriple.isOSWindows();
   bool IsFuchsia = TargetTriple.isOSFuchsia();
+  bool IsOnyx = TargetTriple.isOSOnyx();
   bool IsEmscripten = TargetTriple.isOSEmscripten();
   bool IsAMDGPU = TargetTriple.isAMDGPU();
 
@@ -510,7 +511,7 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
         Mapping.Offset = kNetBSD_ShadowOffset64;
     } else if (IsPS4CPU)
       Mapping.Offset = kPS4CPU_ShadowOffset64;
-    else if (IsLinux && IsX86_64) {
+    else if ((IsLinux || IsOnyx) && IsX86_64) {
       if (IsKasan)
         Mapping.Offset = kLinuxKasan_ShadowOffset64;
       else

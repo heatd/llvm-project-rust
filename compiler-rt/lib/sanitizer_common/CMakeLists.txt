@@ -31,6 +31,7 @@ set(SANITIZER_SOURCES_NOTERMINATION
   sanitizer_procmaps_fuchsia.cpp
   sanitizer_procmaps_linux.cpp
   sanitizer_procmaps_mac.cpp
+  sanitizer_procmaps_onyx.cpp
   sanitizer_procmaps_solaris.cpp
   sanitizer_solaris.cpp
   sanitizer_stoptheworld_fuchsia.cpp
@@ -61,6 +62,7 @@ set(SANITIZER_LIBCDEP_SOURCES
   sanitizer_mac_libcdep.cpp
   sanitizer_posix_libcdep.cpp
   sanitizer_stoptheworld_linux_libcdep.cpp
+  sanitizer_stoptheworld_onyx.cpp
   sanitizer_stoptheworld_netbsd_libcdep.cpp
   )
 

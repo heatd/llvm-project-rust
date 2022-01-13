@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_common/sanitizer_platform.h"
-#if SANITIZER_LINUX || SANITIZER_FREEBSD || SANITIZER_NETBSD
+#if SANITIZER_LINUX || SANITIZER_FREEBSD || SANITIZER_NETBSD || SANITIZER_ONYX
 
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_libc.h"
@@ -35,7 +35,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <sys/mman.h>
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 #include <sys/personality.h>
 #include <setjmp.h>
 #endif
@@ -141,7 +141,7 @@ void WriteMemoryProfile(char *buf, uptr buf_size, uptr nthread, uptr nlive) {
       nlive, nthread);
 }
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 void FlushShadowMemoryCallback(
     const SuspendedThreadsList &suspended_threads_list,
     void *argument) {
@@ -150,7 +150,7 @@ void FlushShadowMemoryCallback(
 #endif
 
 void FlushShadowMemory() {
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
   StopTheWorld(FlushShadowMemoryCallback, 0);
 #endif
 }
@@ -363,7 +363,7 @@ int ExtractRecvmsgFDs(void *msgp, int *fds, int nfd) {
 // Reverse operation of libc stack pointer mangling
 static uptr UnmangleLongJmpSp(uptr mangled_sp) {
 #if defined(__x86_64__)
-# if SANITIZER_LINUX
+# if SANITIZER_LINUX || SANITIZER_ONYX
   // Reverse of:
   //   xor  %fs:0x30, %rsi
   //   rol  $0x11, %rsi
@@ -410,7 +410,7 @@ static uptr UnmangleLongJmpSp(uptr mangled_sp) {
 # define LONG_JMP_SP_ENV_SLOT 0
 #elif SANITIZER_FREEBSD
 # define LONG_JMP_SP_ENV_SLOT 2
-#elif SANITIZER_LINUX
+#elif SANITIZER_LINUX || SANITIZER_ONYX
 # ifdef __aarch64__
 #  define LONG_JMP_SP_ENV_SLOT 13
 # elif defined(__mips64)

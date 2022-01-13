@@ -14,7 +14,7 @@
 
 #include "sanitizer_platform.h"
 #if SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_NETBSD ||                \
-    SANITIZER_SOLARIS
+    SANITIZER_SOLARIS || SANITIZER_ONYX
 #include "sanitizer_common.h"
 #include "sanitizer_internal_defs.h"
 #include "sanitizer_platform_limits_freebsd.h"
@@ -31,6 +31,7 @@ namespace __sanitizer {
 // the one in <dirent.h>, which is used by readdir().
 struct linux_dirent;
 
+#if !SANITIZER_ONYX
 struct ProcSelfMapsBuff {
   char *data;
   uptr mmaped_size;
@@ -44,6 +45,8 @@ struct MemoryMappingLayoutData {
 
 void ReadProcMaps(ProcSelfMapsBuff *proc_maps);
 
+#endif
+
 // Syscall wrappers.
 uptr internal_getdents(fd_t fd, struct linux_dirent *dirp, unsigned int count);
 uptr internal_sigaltstack(const void* ss, void* oss);
@@ -51,6 +54,13 @@ uptr internal_sigprocmask(int how, __sanitizer_sigset_t *set,
     __sanitizer_sigset_t *oldset);
 #if SANITIZER_GLIBC
 uptr internal_clock_gettime(__sanitizer_clockid_t clk_id, void *tp);
+#endif
+
+#if SANITIZER_ONYX
+int internal_onx_handle_open(unsigned int resource_type, uptr id, int flags);
+void internal_onx_handle_close(int handle);
+sptr internal_onx_handle_query(int handle, void *buffer, sptr len, uptr what, uptr *howmany,
+                               void *arg);
 #endif
 
 // Linux-only syscalls.
@@ -73,6 +83,10 @@ void internal_sigdelset(__sanitizer_sigset_t *set, int signum);
 #elif SANITIZER_NETBSD
 void internal_sigdelset(__sanitizer_sigset_t *set, int signum);
 uptr internal_clone(int (*fn)(void *), void *child_stack, int flags, void *arg);
+#elif SANITIZER_ONYX
+int internal_sigaction_norestorer(int signum, const void *act, void *oldact);
+// TODO: Add our own clone thingy
+void internal_sigdelset(__sanitizer_sigset_t *set, int signum);
 #endif  // SANITIZER_LINUX
 
 // This class reads thread IDs from /proc/<pid>/task using only syscalls.

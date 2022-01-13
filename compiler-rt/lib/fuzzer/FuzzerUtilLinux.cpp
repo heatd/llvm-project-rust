@@ -9,7 +9,7 @@
 //===----------------------------------------------------------------------===//
 #include "FuzzerPlatform.h"
 #if LIBFUZZER_LINUX || LIBFUZZER_NETBSD || LIBFUZZER_FREEBSD ||                \
-    LIBFUZZER_EMSCRIPTEN
+    LIBFUZZER_EMSCRIPTEN || LIBFUZZER_ONYX
 #include "FuzzerCommand.h"
 
 #include <stdlib.h>

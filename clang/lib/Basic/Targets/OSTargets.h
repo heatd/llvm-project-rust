@@ -899,6 +899,53 @@ public:
   }
 };
 
+// Onyx target
+template <typename Target>
+class LLVM_LIBRARY_VISIBILITY OnyxTargetInfo : public OSTargetInfo<Target> {
+protected:
+  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
+                    MacroBuilder &Builder) const override {
+    Builder.defineMacro("__Onyx__");
+    Builder.defineMacro("__ONYX__");
+    Builder.defineMacro("__onyx__");
+    Builder.defineMacro("__onyx");
+    DefineStd(Builder, "unix", Opts);
+    Builder.defineMacro("__ELF__");
+
+    if (this->HasFloat128) 
+      Builder.defineMacro("__FLOAT128__");
+    if (Opts.POSIXThreads)
+      Builder.defineMacro("_REENTRANT");
+    // Required by the libc++ locale support.
+    if (Opts.CPlusPlus)
+      Builder.defineMacro("_GNU_SOURCE");
+  }
+
+public:
+  OnyxTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
+      : OSTargetInfo<Target>(Triple, Opts) {
+    this->WIntType = TargetInfo::UnsignedInt;
+
+    switch (Triple.getArch()) {
+    default:
+      break;
+    case llvm::Triple::mips:
+    case llvm::Triple::mipsel:
+    case llvm::Triple::mips64:
+    case llvm::Triple::mips64el:
+    case llvm::Triple::ppc:
+    case llvm::Triple::ppc64:
+    case llvm::Triple::ppc64le:
+      this->MCountName = "_mcount";
+      break;
+    case llvm::Triple::x86:
+    case llvm::Triple::x86_64:
+      this->HasFloat128 = true;
+      break;
+    }
+  }
+};
+
 // WebAssembly target
 template <typename Target>
 class LLVM_LIBRARY_VISIBILITY WebAssemblyOSTargetInfo

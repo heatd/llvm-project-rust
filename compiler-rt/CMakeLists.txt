@@ -194,7 +194,7 @@ macro(handle_default_cxx_lib var)
     if (APPLE OR CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
       set(${var}_LIBNAME "libc++")
       set(${var}_SYSTEM 1)
-    elseif (FUCHSIA)
+    elseif (FUCHSIA OR ONYX)
       set(${var}_LIBNAME "libc++")
       set(${var}_INTREE 1)
     else()
@@ -223,7 +223,7 @@ set_property(CACHE SANITIZER_TEST_CXX PROPERTY STRINGS ;${CXXLIBS})
 handle_default_cxx_lib(SANITIZER_TEST_CXX)
 
 set(DEFAULT_SANITIZER_USE_STATIC_LLVM_UNWINDER OFF)
-if (FUCHSIA)
+if (FUCHSIA OR ONYX)
   set(DEFAULT_SANITIZER_USE_STATIC_LLVM_UNWINDER ON)
 elseif (DEFINED LIBUNWIND_ENABLE_SHARED AND NOT LIBUNWIND_ENABLE_SHARED)
   set(DEFAULT_SANITIZER_USE_STATIC_LLVM_UNWINDER ON)
@@ -484,6 +484,10 @@ string(REGEX REPLACE "-stdlib=[a-zA-Z+]*" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
 # ...we need it to build some runtimes and tests so readd it where appropriate.
 list(APPEND COMPILER_RT_COMMON_CFLAGS ${stdlib_flag})
 list(APPEND COMPILER_RT_COMMON_LINK_FLAGS ${stdlib_flag})
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Onyx")
+  list(APPEND SANITIZER_COMMON_LINK_FLAGS -Wl,-z,defs,-z,now,-z,relro)
+endif()
 
 macro(append_libcxx_libs var)
   if (${var}_INTREE)

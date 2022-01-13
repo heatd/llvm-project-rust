@@ -151,7 +151,7 @@ size_t GetPeakRSSMb() {
   if (getrusage(RUSAGE_SELF, &usage))
     return 0;
   if (LIBFUZZER_LINUX || LIBFUZZER_FREEBSD || LIBFUZZER_NETBSD ||
-      LIBFUZZER_EMSCRIPTEN) {
+      LIBFUZZER_EMSCRIPTEN || LIBFUZZER_ONYX) {
     // ru_maxrss is in KiB
     return usage.ru_maxrss >> 10;
   } else if (LIBFUZZER_APPLE) {

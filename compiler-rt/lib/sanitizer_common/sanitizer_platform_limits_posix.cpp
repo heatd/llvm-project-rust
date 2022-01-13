@@ -11,7 +11,7 @@
 // Sizes and layouts of platform-specific POSIX data structures.
 //===----------------------------------------------------------------------===//
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__onyx__) || defined(__APPLE__)
 // Tests in this file assume that off_t-dependent data structures match the
 // libc ABI. For example, struct dirent here is what readdir() function (as
 // exported from libc) returns, and not the user-facing "dirent", which
@@ -23,7 +23,7 @@
 // Must go after undef _FILE_OFFSET_BITS.
 #include "sanitizer_platform.h"
 
-#if SANITIZER_LINUX || SANITIZER_MAC
+#if SANITIZER_LINUX || SANITIZER_MAC || SANITIZER_ONYX
 // Must go after undef _FILE_OFFSET_BITS.
 #include "sanitizer_glibc_version.h"
 
@@ -160,13 +160,39 @@ typedef struct user_fpregs elf_fpregset_t;
 #include <sys/epoll.h>
 #include <linux/capability.h>
 #else
+
+#if !SANITIZER_ONYX
 #include <fstab.h>
+#endif
+
 #endif // SANITIZER_LINUX
 
 #if SANITIZER_MAC
 #include <net/ethernet.h>
 #include <sys/filio.h>
 #include <sys/sockio.h>
+#endif
+
+#if SANITIZER_ONYX
+#include <mntent.h>
+#include <crypt.h>
+#include <sys/statvfs.h>
+#include <sys/statfs.h>
+#include <glob.h>
+#include <sys/ioctl.h>
+#include <utime.h>
+#include <stdio.h>
+#include <net/ethernet.h>
+#include <netinet/ether.h>
+#include <net/if.h>
+#include <sys/timeb.h>
+#include <sys/mount.h>
+#include <utmpx.h>
+#include <mqueue.h>
+#include <sys/mtio.h>
+#include <sys/msg.h>
+#include <sys/shm.h>
+#include <sys/timex.h>
 #endif
 
 // Include these after system headers to avoid name clashes and ambiguities.
@@ -228,14 +254,14 @@ namespace __sanitizer {
   unsigned struct_oldold_utsname_sz = sizeof(struct oldold_utsname);
 #endif // SANITIZER_LINUX
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
   unsigned struct_rlimit_sz = sizeof(struct rlimit);
   unsigned struct_timespec_sz = sizeof(struct timespec);
   unsigned struct_utimbuf_sz = sizeof(struct utimbuf);
   unsigned struct_itimerspec_sz = sizeof(struct itimerspec);
 #endif // SANITIZER_LINUX
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
   // Use pre-computed size of struct ustat to avoid <sys/ustat.h> which
   // has been removed from glibc 2.28.
 #if defined(__aarch64__) || defined(__s390x__) || defined(__mips64) ||     \
@@ -254,7 +280,7 @@ namespace __sanitizer {
   unsigned struct_crypt_data_sz = sizeof(struct crypt_data);
 #endif // SANITIZER_LINUX && !SANITIZER_ANDROID
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if SANITIZER_LINUX || SANITIZER_ONYX && !SANITIZER_ANDROID
   unsigned struct_timex_sz = sizeof(struct timex);
   unsigned struct_msqid_ds_sz = sizeof(struct msqid_ds);
   unsigned struct_mq_attr_sz = sizeof(struct mq_attr);
@@ -271,7 +297,7 @@ namespace __sanitizer {
 #endif
 
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if SANITIZER_LINUX || SANITIZER_ONYX && !SANITIZER_ANDROID
   unsigned struct_shminfo_sz = sizeof(struct shminfo);
   unsigned struct_shm_info_sz = sizeof(struct shm_info);
   int shmctl_ipc_stat = (int)IPC_STAT;
@@ -484,7 +510,7 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
   unsigned struct_ppp_stats_sz = sizeof(struct ppp_stats);
 #endif  // SANITIZER_GLIBC
 
-#if !SANITIZER_ANDROID && !SANITIZER_MAC
+#if !SANITIZER_ANDROID && !SANITIZER_MAC && !SANITIZER_ONYX
   unsigned struct_sioc_sg_req_sz = sizeof(struct sioc_sg_req);
   unsigned struct_sioc_vif_req_sz = sizeof(struct sioc_vif_req);
 #endif
@@ -537,6 +563,7 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
   unsigned IOCTL_TIOCSPGRP = TIOCSPGRP;
   unsigned IOCTL_TIOCSTI = TIOCSTI;
   unsigned IOCTL_TIOCSWINSZ = TIOCSWINSZ;
+
 #if SANITIZER_LINUX && !SANITIZER_ANDROID
   unsigned IOCTL_SIOCGETSGCNT = SIOCGETSGCNT;
   unsigned IOCTL_SIOCGETVIFCNT = SIOCGETVIFCNT;
@@ -1173,7 +1200,7 @@ CHECK_SIZE_AND_OFFSET(ifaddrs, ifa_next);
 CHECK_SIZE_AND_OFFSET(ifaddrs, ifa_name);
 CHECK_SIZE_AND_OFFSET(ifaddrs, ifa_addr);
 CHECK_SIZE_AND_OFFSET(ifaddrs, ifa_netmask);
-#if SANITIZER_LINUX || SANITIZER_FREEBSD
+#if SANITIZER_LINUX || SANITIZER_FREEBSD || SANITIZER_ONYX
 // Compare against the union, because we can't reach into the union in a
 // compliant way.
 #ifdef ifa_dstaddr

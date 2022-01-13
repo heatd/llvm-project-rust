@@ -13,7 +13,7 @@
 
 #include "sanitizer_common/sanitizer_platform.h"
 #if SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_NETBSD || \
-    SANITIZER_SOLARIS
+    SANITIZER_SOLARIS || SANITIZER_ONYX
 
 #include "asan_interceptors.h"
 #include "asan_internal.h"
@@ -57,6 +57,7 @@ extern Elf_Dyn _DYNAMIC;
 #include <link.h>
 extern ElfW(Dyn) _DYNAMIC[];
 #endif
+
 
 // x86-64 FreeBSD 9.2 and older define 'ucontext_t' incorrectly in
 // 32-bit mode.
@@ -139,7 +140,7 @@ static int FindFirstDSOCallback(struct dl_phdr_info *info, size_t size,
   if (internal_strncmp(info->dlpi_name, "linux-", sizeof("linux-") - 1) == 0)
     return 0;
 
-#if SANITIZER_FREEBSD || SANITIZER_NETBSD
+#if SANITIZER_FREEBSD || SANITIZER_NETBSD || SANITIZER_ONYX
   // Ignore first entry (the main program)
   char **p = (char **)data;
   if (!(*p)) {
@@ -240,4 +241,4 @@ bool HandleDlopenInit() {
 } // namespace __asan
 
 #endif  // SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_NETBSD ||
-        // SANITIZER_SOLARIS
+        // SANITIZER_SOLARIS || SANITIZER_ONYX

@@ -14,7 +14,7 @@
 #ifndef SANITIZER_PLATFORM_LIMITS_POSIX_H
 #define SANITIZER_PLATFORM_LIMITS_POSIX_H
 
-#if SANITIZER_LINUX || SANITIZER_MAC
+#if SANITIZER_LINUX || SANITIZER_ONYX || SANITIZER_MAC
 
 #include "sanitizer_internal_defs.h"
 #include "sanitizer_platform.h"
@@ -54,7 +54,9 @@ extern unsigned struct_regex_sz;
 extern unsigned struct_regmatch_sz;
 
 #if !SANITIZER_ANDROID
+#if !SANITIZER_ONYX
 extern unsigned struct_fstab_sz;
+#endif
 extern unsigned struct_statfs_sz;
 extern unsigned struct_sockaddr_sz;
 extern unsigned ucontext_t_sz;
@@ -120,7 +122,7 @@ extern unsigned struct_oldold_utsname_sz;
 const unsigned struct_kexec_segment_sz = 4 * sizeof(unsigned long);
 #endif  // SANITIZER_LINUX
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 
 #if defined(__powerpc64__) || defined(__s390__)
 const unsigned struct___old_kernel_stat_sz = 0;
@@ -175,11 +177,11 @@ struct __sanitizer_sem_t {
   int data[4];
 #elif SANITIZER_ANDROID && !defined(_LP64)
   int data;
-#elif SANITIZER_LINUX
+#elif SANITIZER_LINUX || SANITIZER_ONYX
   uptr data[4];
 #endif
 };
-#endif // SANITIZER_LINUX
+#endif // SANITIZER_LINUX || SANITIZER_ONYX
 
 #if SANITIZER_ANDROID
 struct __sanitizer_struct_mallinfo {
@@ -187,7 +189,7 @@ struct __sanitizer_struct_mallinfo {
 };
 #endif
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 struct __sanitizer_struct_mallinfo {
   int v[10];
 };
@@ -290,7 +292,7 @@ struct __sanitizer_shmid_ds {
 };
 #endif
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 extern unsigned struct_msqid_ds_sz;
 extern unsigned struct_mq_attr_sz;
 extern unsigned struct_timex_sz;
@@ -410,7 +412,7 @@ struct __sanitizer_tm {
   const char *tm_zone;
 };
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 struct __sanitizer_mntent {
   char *mnt_fsname;
   char *mnt_dir;
@@ -442,6 +444,42 @@ struct __sanitizer_cmsghdr {
   int cmsg_level;
   int cmsg_type;
 };
+#elif SANITIZER_ONYX
+
+struct __sanitizer_msghdr {
+	void *msg_name;
+	unsigned int msg_namelen;
+	struct __sanitizer_iovec *msg_iov;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+	int __pad1;
+#endif
+	int msg_iovlen;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+	int __pad1;
+#endif
+	void *msg_control;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+	int __pad2;
+#endif
+	unsigned int msg_controllen;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+	int __pad2;
+#endif
+	int msg_flags;
+};
+
+struct __sanitizer_cmsghdr {
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+	int __pad1;
+#endif
+	unsigned int cmsg_len;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+	int __pad1;
+#endif
+	int cmsg_level;
+	int cmsg_type;
+};
+
 #else
 // In POSIX, int msg_iovlen; socklen_t msg_controllen; socklen_t cmsg_len; but
 // many implementations don't conform to the standard.
@@ -461,7 +499,7 @@ struct __sanitizer_cmsghdr {
 };
 #endif
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 struct __sanitizer_mmsghdr {
   __sanitizer_msghdr msg_hdr;
   unsigned int msg_len;
@@ -491,7 +529,7 @@ struct __sanitizer_dirent {
 };
 #endif
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 struct __sanitizer_dirent64 {
   unsigned long long d_ino;
   unsigned long long d_off;
@@ -506,11 +544,11 @@ typedef long long __sanitizer_clock_t;
 typedef long __sanitizer_clock_t;
 #endif
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 typedef int __sanitizer_clockid_t;
 #endif
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 #if defined(_LP64) || defined(__x86_64__) || defined(__powerpc__) || \
     defined(__mips__)
 typedef unsigned __sanitizer___kernel_uid_t;
@@ -554,7 +592,7 @@ typedef unsigned long __sanitizer_sigset_t;
 # endif
 #elif SANITIZER_MAC
 typedef unsigned __sanitizer_sigset_t;
-#elif SANITIZER_LINUX
+#elif (SANITIZER_LINUX || SANITIZER_ONYX)
 struct __sanitizer_sigset_t {
   // The size is determined by looking at sizeof of real sigset_t on linux.
   uptr val[128 / sizeof(uptr)];
@@ -637,7 +675,7 @@ struct __sanitizer_sigaction {
 #endif
 #endif
 #endif
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
   void (*sa_restorer)();
 #endif
 #if defined(__mips__) && (SANITIZER_WORDSIZE == 32)
@@ -687,7 +725,7 @@ extern const uptr sig_dfl;
 extern const uptr sig_err;
 extern const uptr sa_siginfo;
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 extern int e_tabsz;
 #endif
 
@@ -695,7 +733,7 @@ extern int af_inet;
 extern int af_inet6;
 uptr __sanitizer_in_addr_sz(int af);
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 struct __sanitizer_dl_phdr_info {
   uptr dlpi_addr;
   const char *dlpi_name;
@@ -750,7 +788,7 @@ typedef unsigned long __sanitizer_nfds_t;
 #endif
 
 #if !SANITIZER_ANDROID
-# if SANITIZER_LINUX
+# if (SANITIZER_LINUX || SANITIZER_ONYX)
 struct __sanitizer_glob_t {
   uptr gl_pathc;
   char **gl_pathv;
@@ -763,9 +801,9 @@ struct __sanitizer_glob_t {
   int (*gl_lstat)(const char *, void *);
   int (*gl_stat)(const char *, void *);
 };
-# endif  // SANITIZER_LINUX
+# endif  // (SANITIZER_LINUX || SANITIZER_ONYX)
 
-# if SANITIZER_LINUX
+# if (SANITIZER_LINUX || SANITIZER_ONYX)
 extern int glob_nomatch;
 extern int glob_altdirfunc;
 # endif
@@ -779,7 +817,7 @@ struct __sanitizer_wordexp_t {
   uptr we_offs;
 };
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 struct __sanitizer_FILE {
   int _flags;
   char *_IO_read_ptr;
@@ -803,7 +841,7 @@ typedef void __sanitizer_FILE;
 # define SANITIZER_HAS_STRUCT_FILE 0
 #endif
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID &&                               \
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID &&                               \
     (defined(__i386) || defined(__x86_64) || defined(__mips64) ||          \
      defined(__powerpc64__) || defined(__aarch64__) || defined(__arm__) || \
      defined(__s390__) || SANITIZER_RISCV64)
@@ -830,7 +868,7 @@ extern int ptrace_setregset;
 extern int ptrace_geteventmsg;
 #endif
 
-#if SANITIZER_LINUX  && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX)  && !SANITIZER_ANDROID
 extern unsigned struct_shminfo_sz;
 extern unsigned struct_shm_info_sz;
 extern int shmctl_ipc_stat;
@@ -860,7 +898,7 @@ struct __sanitizer_ifconf {
 };
 #endif
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 struct __sanitizer__obstack_chunk {
   char *limit;
   struct __sanitizer__obstack_chunk *prev;
@@ -937,7 +975,7 @@ extern unsigned struct_ifreq_sz;
 extern unsigned struct_termios_sz;
 extern unsigned struct_winsize_sz;
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 extern unsigned struct_arpreq_sz;
 extern unsigned struct_cdrom_msf_sz;
 extern unsigned struct_cdrom_multisession_sz;
@@ -965,9 +1003,9 @@ extern unsigned struct_termio_sz;
 extern unsigned struct_vt_consize_sz;
 extern unsigned struct_vt_sizes_sz;
 extern unsigned struct_vt_stat_sz;
-#endif  // SANITIZER_LINUX
+#endif  // (SANITIZER_LINUX || SANITIZER_ONYX)
 
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 extern unsigned struct_copr_buffer_sz;
 extern unsigned struct_copr_debug_buf_sz;
 extern unsigned struct_copr_msg_sz;
@@ -979,9 +1017,9 @@ extern unsigned struct_sbi_instrument_sz;
 extern unsigned struct_seq_event_rec_sz;
 extern unsigned struct_synth_info_sz;
 extern unsigned struct_vt_mode_sz;
-#endif // SANITIZER_LINUX
+#endif // (SANITIZER_LINUX || SANITIZER_ONYX)
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 extern unsigned struct_ax25_parms_struct_sz;
 extern unsigned struct_input_keymap_entry_sz;
 extern unsigned struct_ipx_config_data_sz;
@@ -998,14 +1036,14 @@ extern unsigned struct_serial_struct_sz;
 extern unsigned struct_sockaddr_ax25_sz;
 extern unsigned struct_unimapdesc_sz;
 extern unsigned struct_unimapinit_sz;
-#endif  // SANITIZER_LINUX && !SANITIZER_ANDROID
+#endif  // (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 
 extern const unsigned long __sanitizer_bufsiz;
 
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 extern unsigned struct_audio_buf_info_sz;
 extern unsigned struct_ppp_stats_sz;
-#endif  // (SANITIZER_LINUX || SANITIZER_FREEBSD) && !SANITIZER_ANDROID
+#endif  // ((SANITIZER_LINUX || SANITIZER_ONYX) || SANITIZER_FREEBSD) && !SANITIZER_ANDROID
 
 #if !SANITIZER_ANDROID && !SANITIZER_MAC
 extern unsigned struct_sioc_sg_req_sz;
@@ -1062,11 +1100,11 @@ extern unsigned IOCTL_TIOCSETD;
 extern unsigned IOCTL_TIOCSPGRP;
 extern unsigned IOCTL_TIOCSTI;
 extern unsigned IOCTL_TIOCSWINSZ;
-#if SANITIZER_LINUX && !SANITIZER_ANDROID
+#if (SANITIZER_LINUX || SANITIZER_ONYX) && !SANITIZER_ANDROID
 extern unsigned IOCTL_SIOCGETSGCNT;
 extern unsigned IOCTL_SIOCGETVIFCNT;
 #endif
-#if SANITIZER_LINUX
+#if (SANITIZER_LINUX || SANITIZER_ONYX)
 extern unsigned IOCTL_EVIOCGABS;
 extern unsigned IOCTL_EVIOCGBIT;
 extern unsigned IOCTL_EVIOCGEFFECTS;
@@ -1324,7 +1362,7 @@ extern unsigned IOCTL_VT_OPENQRY;
 extern unsigned IOCTL_VT_RELDISP;
 extern unsigned IOCTL_VT_SETMODE;
 extern unsigned IOCTL_VT_WAITACTIVE;
-#endif  // SANITIZER_LINUX
+#endif  // (SANITIZER_LINUX || SANITIZER_ONYX)
 
 #if SANITIZER_LINUX && !SANITIZER_ANDROID
 extern unsigned IOCTL_EQL_EMANCIPATE;
@@ -1440,6 +1478,6 @@ extern const int si_SEGV_ACCERR;
 
 #define SIGACTION_SYMNAME sigaction
 
-#endif  // SANITIZER_LINUX || SANITIZER_MAC
+#endif  // (SANITIZER_LINUX || SANITIZER_ONYX) || SANITIZER_MAC
 
 #endif

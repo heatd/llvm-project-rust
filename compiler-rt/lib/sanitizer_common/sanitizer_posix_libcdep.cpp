@@ -293,7 +293,9 @@ void PlatformPrepareForSandboxing(__sanitizer_sandbox_arguments *args) {
   // to read the file mappings from /proc/self/maps. Luckily, neither the
   // process will be able to load additional libraries, so it's fine to use the
   // cached mappings.
+#if !SANITIZER_ONYX
   MemoryMappingLayout::CacheMemoryMappings();
+#endif
 }
 
 static bool MmapFixed(uptr fixed_addr, uptr size, int additional_flags,

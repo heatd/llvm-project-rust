@@ -14,7 +14,7 @@
 
 #if !defined(__linux__) && !defined(__FreeBSD__) && !defined(__NetBSD__) && \
     !defined(__APPLE__) && !defined(_WIN32) && !defined(__Fuchsia__) &&     \
-    !(defined(__sun__) && defined(__svr4__))
+    !(defined(__sun__) && defined(__svr4__)) && !defined(__onyx__)
 #  error "This operating system is not supported"
 #endif
 
@@ -116,9 +116,15 @@
 # define SANITIZER_FUCHSIA 0
 #endif
 
+#if defined(__onyx__)
+# define SANITIZER_ONYX 1
+#else
+# define SANITIZER_ONYX 0
+#endif
+
 #define SANITIZER_POSIX \
   (SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_MAC || \
-    SANITIZER_NETBSD || SANITIZER_SOLARIS)
+    SANITIZER_NETBSD || SANITIZER_SOLARIS || SANITIZER_ONYX)
 
 #if __LP64__ || defined(_WIN64)
 #  define SANITIZER_WORDSIZE 64

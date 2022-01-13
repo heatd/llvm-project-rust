@@ -14,7 +14,7 @@
 #include "sanitizer_platform.h"
 
 #if SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_NETBSD || \
-    SANITIZER_SOLARIS
+    SANITIZER_SOLARIS || SANITIZER_ONYX
 
 #include "sanitizer_common.h"
 #include "sanitizer_flags.h"
@@ -103,6 +103,12 @@ extern struct ps_strings *__ps_strings;
 #define environ _environ
 #endif
 
+#if SANITIZER_ONYX
+
+#include <onyx/public/handle.h>
+#include <onyx/public/process.h>
+
+#endif
 extern char **environ;
 
 #if SANITIZER_LINUX
@@ -112,13 +118,18 @@ struct kernel_timeval {
   long tv_usec;
 };
 
+#endif  // SANITIZER_LINUX
+
+#if SANITIZER_LINUX || SANITIZER_ONYX
+
 // <linux/futex.h> is broken on some linux distributions.
 const int FUTEX_WAIT = 0;
 const int FUTEX_WAKE = 1;
 const int FUTEX_PRIVATE_FLAG = 128;
 const int FUTEX_WAIT_PRIVATE = FUTEX_WAIT | FUTEX_PRIVATE_FLAG;
 const int FUTEX_WAKE_PRIVATE = FUTEX_WAKE | FUTEX_PRIVATE_FLAG;
-#endif  // SANITIZER_LINUX
+
+#endif // SANITIZER_LINUX || SANITIZER_ONYX
 
 // Are we using 32-bit or 64-bit Linux syscalls?
 // x32 (which defines __x86_64__) has SANITIZER_WORDSIZE == 32
@@ -167,7 +178,7 @@ namespace __sanitizer {
 #if !SANITIZER_S390
 uptr internal_mmap(void *addr, uptr length, int prot, int flags, int fd,
                    u64 offset) {
-#if SANITIZER_FREEBSD || SANITIZER_LINUX_USES_64BIT_SYSCALLS
+#if SANITIZER_FREEBSD || SANITIZER_LINUX_USES_64BIT_SYSCALLS || SANITIZER_ONYX
   return internal_syscall(SYSCALL(mmap), (uptr)addr, length, prot, flags, fd,
                           offset);
 #else
@@ -311,7 +322,7 @@ static void kernel_stat_to_stat(struct kernel_stat *in, struct stat *out) {
 #endif
 
 uptr internal_stat(const char *path, void *buf) {
-#if SANITIZER_FREEBSD
+#if SANITIZER_FREEBSD || SANITIZER_ONYX
   return internal_syscall(SYSCALL(fstatat), AT_FDCWD, (uptr)path, (uptr)buf, 0);
 #elif SANITIZER_USES_CANONICAL_LINUX_SYSCALLS
   return internal_syscall(SYSCALL(newfstatat), AT_FDCWD, (uptr)path, (uptr)buf,
@@ -335,7 +346,7 @@ uptr internal_stat(const char *path, void *buf) {
 }
 
 uptr internal_lstat(const char *path, void *buf) {
-#if SANITIZER_FREEBSD
+#if SANITIZER_FREEBSD || SANITIZER_ONYX
   return internal_syscall(SYSCALL(fstatat), AT_FDCWD, (uptr)path, (uptr)buf,
                           AT_SYMLINK_NOFOLLOW);
 #elif SANITIZER_USES_CANONICAL_LINUX_SYSCALLS
@@ -360,7 +371,7 @@ uptr internal_lstat(const char *path, void *buf) {
 }
 
 uptr internal_fstat(fd_t fd, void *buf) {
-#if SANITIZER_FREEBSD || SANITIZER_LINUX_USES_64BIT_SYSCALLS
+#if SANITIZER_FREEBSD || SANITIZER_LINUX_USES_64BIT_SYSCALLS || SANITIZER_ONYX
 #if SANITIZER_MIPS64
   // For mips64, fstat syscall fills buffer in the format of kernel_stat
   struct kernel_stat kbuf;
@@ -484,7 +495,7 @@ tid_t GetTid() {
 }
 
 int TgKill(pid_t pid, tid_t tid, int sig) {
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
   return internal_syscall(SYSCALL(tgkill), pid, tid, sig);
 #elif SANITIZER_FREEBSD
   return internal_syscall(SYSCALL(thr_kill2), pid, tid, sig);
@@ -518,7 +529,7 @@ u64 NanoTime() {
 // 'environ' array (on some others) and does not use libc. This function
 // should be called first inside __asan_init.
 const char *GetEnv(const char *name) {
-#if SANITIZER_FREEBSD || SANITIZER_NETBSD || SANITIZER_SOLARIS
+#if SANITIZER_FREEBSD || SANITIZER_NETBSD || SANITIZER_SOLARIS || SANITIZER_ONYX
   if (::environ != 0) {
     uptr NameLen = internal_strlen(name);
     for (char **Env = ::environ; *Env != 0; Env++) {
@@ -785,6 +796,27 @@ int internal_fork() {
   return internal_syscall(SYSCALL(fork));
 #endif
 }
+
+#if SANITIZER_ONYX
+
+int internal_onx_handle_open(unsigned int resource_type, unsigned long id, int flags)
+{
+	return internal_syscall(SYSCALL(onx_handle_open), resource_type, id, flags);
+}
+
+void internal_onx_handle_close(int handle)
+{
+	internal_close(handle);
+}
+
+ssize_t internal_onx_handle_query(int handle, void *buffer, ssize_t len, unsigned long what, size_t *howmany,
+                                        void *arg)
+{
+	return internal_syscall(SYSCALL(onx_handle_query), handle, buffer, len, what, howmany, arg);
+}
+
+#endif
+
 
 #if SANITIZER_FREEBSD
 int internal_sysctl(const int *name, unsigned int namelen, void *oldp,
@@ -1130,6 +1162,28 @@ uptr ReadBinaryName(/*out*/char *buf, uptr buf_len) {
       (internal_sysctl(Mib, ARRAY_SIZE(Mib), buf, &Size, NULL, 0) != 0);
   int readlink_error = IsErr ? errno : 0;
   uptr module_name_len = Size;
+#elif SANITIZER_ONYX
+  int readlink_error = EINVAL;
+  const char *default_module_name = "<executable>";
+  uptr module_name_len = 0;
+  bool IsErr = false;
+
+  int handle = internal_onx_handle_open(ONX_HANDLE_TYPE_PROCESS, internal_getpid(), ONX_HANDLE_CLOEXEC);
+  if (handle < 0) {
+    IsErr = true;
+  } else {
+    module_name_len = internal_onx_handle_query(handle, buf, buf_len, PROCESS_GET_PATH, nullptr, nullptr);
+    
+    if (module_name_len == -1) {
+      IsErr = true;
+    }
+
+    module_name_len--;
+  
+    internal_onx_handle_close(handle);
+  }
+
+  readlink_error = IsErr ? errno : 0;
 #else
   const char *default_module_name = "/proc/self/exe";
   uptr module_name_len = internal_readlink(

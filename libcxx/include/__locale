@@ -43,7 +43,7 @@
 #elif defined(__wasi__)
 // WASI libc uses musl's locales support.
 # include <__support/musl/xlocale.h>
-#elif defined(_LIBCPP_HAS_MUSL_LIBC)
+#elif defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__onyx__)
 # include <__support/musl/xlocale.h>
 #endif
 

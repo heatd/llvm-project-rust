@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#if !(SANITIZER_NETBSD || SANITIZER_FREEBSD || SANITIZER_LINUX)
+#if !(SANITIZER_NETBSD || SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_ONYX)
 #error "Support for your platform has not been implemented"
 #endif
 

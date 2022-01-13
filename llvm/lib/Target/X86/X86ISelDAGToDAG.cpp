@@ -1632,7 +1632,7 @@ bool X86DAGToDAGISel::matchLoadInAddress(LoadSDNode *N, X86ISelAddressMode &AM,
     if (C->getSExtValue() == 0 && AM.Segment.getNode() == nullptr &&
         !IndirectTlsSegRefs &&
         (Subtarget->isTargetGlibc() || Subtarget->isTargetAndroid() ||
-         Subtarget->isTargetFuchsia())) {
+         Subtarget->isTargetFuchsia() || Subtarget->isTargetOnyx())) {
       if (Subtarget->isTarget64BitILP32() && !AllowSegmentRegForX32)
         return true;
       switch (N->getPointerInfo().getAddrSpace()) {

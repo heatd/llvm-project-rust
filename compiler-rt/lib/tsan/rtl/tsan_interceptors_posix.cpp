@@ -1063,7 +1063,7 @@ TSAN_INTERCEPTOR(void, pthread_exit, void *retval) {
   REAL(pthread_exit)(retval);
 }
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX || SANITIZER_ONYX
 TSAN_INTERCEPTOR(int, pthread_tryjoin_np, void *th, void **ret) {
   SCOPED_INTERCEPTOR_RAW(pthread_tryjoin_np, th, ret);
   int tid = ThreadConsumeTid(thr, pc, (uptr)th);
@@ -1517,7 +1517,7 @@ TSAN_INTERCEPTOR(int, __fxstat, int version, int fd, void *buf) {
 #endif
 
 TSAN_INTERCEPTOR(int, fstat, int fd, void *buf) {
-#if SANITIZER_FREEBSD || SANITIZER_MAC || SANITIZER_ANDROID || SANITIZER_NETBSD
+#if SANITIZER_FREEBSD || SANITIZER_MAC || SANITIZER_ANDROID || SANITIZER_NETBSD || SANITIZER_ONYX
   SCOPED_TSAN_INTERCEPTOR(fstat, fd, buf);
   if (fd > 0)
     FdAccess(thr, pc, fd);
@@ -2752,7 +2752,7 @@ void InitializeInterceptors() {
   TSAN_INTERCEPT(pthread_join);
   TSAN_INTERCEPT(pthread_detach);
   TSAN_INTERCEPT(pthread_exit);
-  #if SANITIZER_LINUX
+  #if SANITIZER_LINUX || SANITIZER_ONYX
   TSAN_INTERCEPT(pthread_tryjoin_np);
   TSAN_INTERCEPT(pthread_timedjoin_np);
   #endif
